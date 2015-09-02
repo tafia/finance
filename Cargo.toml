@@ -2,3 +2,6 @@
 name = "finance"
 version = "0.1.0"
 authors = ["Johann Tuffe <tafia973@gmail.com>"]
+
+[dependencies]
+num = "*"
