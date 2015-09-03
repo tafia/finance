@@ -3,14 +3,14 @@
 
 extern crate num;
 
-mod time;
+mod cash_flow;
 
-use num::traits::Float;
+use num::traits::{Float, Signed};
 use std::num::{Zero, One};
 use std::ops::{Add, Sub, Mul};
 
 /// General purpose float trait for finance
-pub trait FloatExt : Float + Zero + One + Add<Self> + Sub<Self> + Mul<Self> {
+pub trait FloatExt : Float + Zero + One + Add<Self> + Sub<Self> + Mul<Self> + Signed {
     /// Set Self = Self / 2
     fn half(&mut self);
 }
