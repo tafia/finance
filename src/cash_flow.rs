@@ -1,6 +1,5 @@
 use std::num::{Zero, One};
 use std::mem;
-use std::fmt::Debug;
 use std::ops::Range;
 use super::FloatExt;
 

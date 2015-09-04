@@ -3,8 +3,9 @@
 
 extern crate num;
 
-mod cash_flow;
 mod bond;
+mod cash_flow;
+mod term_structure;
 
 use num::traits::{Float, Signed};
 use std::num::{Zero, One};
