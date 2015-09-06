@@ -1,4 +1,4 @@
-use super::FloatExt;
+use FloatExt;
 use std::num::{Zero, One};
 
 fn max<'a, F: FloatExt>(a: &'a F, b: &'a F) -> &'a F {

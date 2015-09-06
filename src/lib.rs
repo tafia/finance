@@ -2,11 +2,12 @@
 #![feature(zero_one)]
 
 extern crate num;
+extern crate rand;
 
-mod binomial_option;
 mod bond;
 mod cash_flow;
 mod future;
+mod option;
 mod term_structure;
 
 use num::traits::{Float, Signed};
