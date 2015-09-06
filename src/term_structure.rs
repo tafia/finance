@@ -46,7 +46,7 @@ pub fn yield_linearly_interpolated<F: FloatExt>(t: &F, times: &[F], yields: &[F]
 
 /// Base trait to define a term structure
 /// Default fn implementations are cyclic
-trait TermStructure {
+pub trait TermStructure {
     type FloatType: FloatExt;
     fn yield_(&self, t: &Self::FloatType) -> Self::FloatType {
         yield_from_discount_factor(&self.discount_factor(t), t)
@@ -60,12 +60,12 @@ trait TermStructure {
     }
 }
 
-struct TermStructureFlat<F> {
+pub struct TermStructureFlat<F> {
     r: F
 }
 
 impl<F> TermStructureFlat<F> {
-    fn new(r: F) -> TermStructureFlat<F> {
+    pub fn new(r: F) -> TermStructureFlat<F> {
         TermStructureFlat {
             r: r
         }
@@ -76,9 +76,48 @@ impl<F: FloatExt> TermStructure for TermStructureFlat<F> {
     type FloatType = F;
     fn yield_(&self, t: &F) -> F {
         let zero = <F as Zero>::zero();
-        if self.r >= zero {
+        if *t >= zero {
             return self.r;
         }
         zero
     }
+}
+
+#[derive(PartialEq, Eq)]
+pub struct TermStructureInterpolated<F> {
+    times: Vec<F>,
+    yields: Vec<F>
+}
+
+impl<F> TermStructureInterpolated<F> {
+    pub fn new(times: Vec<F>, yields: Vec<F>) -> TermStructureInterpolated<F> {
+        TermStructureInterpolated {
+            times: times,
+            yields: yields
+        }
+    }
+}
+
+impl<F: FloatExt> TermStructure for TermStructureInterpolated<F> {
+    type FloatType = F;
+    fn yield_(&self, t: &F) -> F {
+        yield_linearly_interpolated(t, &self.times, &self.yields)
+    }
+}
+
+pub fn bonds_price<F, T>(times: &[F], cash_flows: &[F], d: &T) -> F
+        where F: FloatExt, T: TermStructure<FloatType=F> {
+    times.iter().zip(cash_flows.iter()).map(|(t, &cf)| cf * d.discount_factor(t)).sum()
+}
+
+pub fn bonds_duration<F, T>(times: &[F], cash_flows: &[F], d: &T) -> F
+        where F: FloatExt, T: TermStructure<FloatType=F> {
+    let mut sum = <F as Zero>::zero();
+    let mut duration = <F as Zero>::zero();
+    for (t, &cf) in times.iter().zip(cash_flows.iter()) {
+        let discounted_cf = cf * d.discount_factor(t);
+        sum = sum + discounted_cf;
+        duration = duration + *t * discounted_cf;
+    }
+    duration / sum
 }
