@@ -3,6 +3,7 @@
 
 extern crate num;
 
+mod binomial_option;
 mod bond;
 mod cash_flow;
 mod future;
