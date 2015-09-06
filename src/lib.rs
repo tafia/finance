@@ -5,6 +5,7 @@ extern crate num;
 
 mod bond;
 mod cash_flow;
+mod future;
 mod term_structure;
 
 use num::traits::{Float, Signed};
