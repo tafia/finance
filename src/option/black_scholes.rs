@@ -1,5 +1,4 @@
-use FloatExt;
-use rand::distributions::normal::Normal;
+use math::standard_normal_cdf;
 
 /// European option price
 /// Can be exerced only at a given date
@@ -8,9 +7,10 @@ use rand::distributions::normal::Normal;
 /// r: interest rate (per period)
 /// sigma: standard deviation of underlying asset
 /// t: time to maturity
-pub fn price_call_european<F: FloatExt>(s: &F, k: &F, r: &F, sigma: &F, t: &F) -> F {
-    let sqrt_t = t.sqrt();
-    let d1 = ((*s / *k).ln() + *r * *t) / (*sigma * sqrt_t) + (*sigma * sqrt_t).half();
-    let d2 = d1 - *sigma * sqrt_t;
+pub fn price_call_european(s: &f64, k: &f64, r: &f64, sigma: &f64, t: &f64) -> f64 {
+    let sig_t = *sigma * t.sqrt();
+    let d1 = ((*s / *k).ln() + *r * *t) / sig_t + sig_t / 2.0;
+    let d2 = d1 - sig_t;
+    let c = *s *
     *s
 }
