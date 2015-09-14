@@ -16,7 +16,7 @@ pub struct Greeks {
 /// r: interest rate (per period)
 /// sigma: standard deviation of underlying asset
 /// t: time to maturity
-pub fn call_price_and_greeks(s: f64, k: f64, r: f64, sigma: f64, t: f64, with_greeks: bool) -> (f64, Option<Greeks>) {
+pub fn call_price(s: f64, k: f64, r: f64, sigma: f64, t: f64, greeks: &mut Option<Greeks>) -> f64 {
     let sqrt_t = t.sqrt();
     let sig_sqrt_t = sigma * sqrt_t;
     let d1 = ((s / k).ln() + r * t) / sig_sqrt_t + sig_sqrt_t / 2.0;
@@ -24,43 +24,42 @@ pub fn call_price_and_greeks(s: f64, k: f64, r: f64, sigma: f64, t: f64, with_gr
     let cdf1 = standard_normal_cdf(d1);
     let cdf2 = standard_normal_cdf(d2);
 
-    (s * cdf1 - k * (-r * t).exp() * cdf2,
-        if with_greeks {
-            let pdf1 = standard_normal_pdf(d1);
-            Some(Greeks {
-                    delta: cdf1,
-                    gamma: pdf1 / (s * sig_sqrt_t),
-                    theta: -(s * sigma * pdf1) / (2.0 * sqrt_t) - r * k * (-r * t).exp() * cdf2,
-                    vega: s * sqrt_t * pdf1,
-                    rho: k * t * (-r * t).exp() * cdf2
-                })
-        } else {
-            None
-        })
+    if let Some(ref mut greeks) = *greeks {
+        let pdf1 = standard_normal_pdf(d1);
+        *greeks = Greeks {
+            delta: cdf1,
+            gamma: pdf1 / (s * sig_sqrt_t),
+            theta: -(s * sigma * pdf1) / (2.0 * sqrt_t) - r * k * (-r * t).exp() * cdf2,
+            vega: s * sqrt_t * pdf1,
+            rho: k * t * (-r * t).exp() * cdf2
+        };
+    }
+    s * cdf1 - k * (-r * t).exp() * cdf2
 }
 
 pub fn implied_volatility_call_bissection(s: f64, k: f64, r: f64, t: f64, option_price: f64) ->
 Result<f64, &'static str>
     {
     let mut sigma_low = 1.0e-4; // check for arbitrage violation
-    let (mut price, _) = call_price_and_greeks(s, k, r, sigma_low, t, false);
+    let mut no_greek = None;
+    let mut price = call_price(s, k, r, sigma_low, t, &mut no_greek);
 
     if price > option_price {
         return Err("Arbitrage violation");
     }
 
     let mut sigma_high = 0.3f64;
-    price = call_price_and_greeks(s, k, r, sigma_high, t, false).0;
+    price = call_price(s, k, r, sigma_high, t, &mut no_greek);
     while price < option_price {
         sigma_high *= 2.0;
-        price = call_price_and_greeks(s, k, r, sigma_high, t, false).0;
+        price = call_price(s, k, r, sigma_high, t, &mut no_greek);
         if sigma_high > HIGH_VALUE {
             return Err("Something wrong");
         }
     }
     for _ in 0..MAX_ITERATIONS {
         let sigma = (sigma_low + sigma_high) * 0.5;
-        price = call_price_and_greeks(s, k, r, sigma, t, false).0;
+        price = call_price(s, k, r, sigma, t, &mut no_greek);
         let diff = price - option_price;
         if diff.abs() < ACCURACY {
             return Ok(sigma);
