@@ -7,6 +7,7 @@ extern crate rand;
 mod bond;
 mod cash_flow;
 mod future;
+mod math;
 mod option;
 mod term_structure;
 
