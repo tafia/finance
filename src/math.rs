@@ -8,10 +8,15 @@ const P: f64 = 0.3275911;
 /// Normal  cumulative density function
 pub fn standard_normal_cdf(mut x: f64) -> f64 {
     let sign = x.signum();
-    x = x.abs() / 2f64.sqrt();
+    x = x.abs() * ::std::f64::consts::FRAC_1_SQRT_2;
 
     let t = 1.0 / (1.0 + P * x);
     let y = 1.0 - (((((A5 * t + A4) * t) + A3) * t + A2) * t + A1) * t * (-x*x).exp();
 
     0.5*(1.0 + sign * y)
+}
+
+/// Normal  cumulative density function
+pub fn standard_normal_pdf(mut x: f64) -> f64 {
+    (- x * x).exp() * ::std::f64::consts::FRAC_2_SQRT_PI / 4.0
 }
