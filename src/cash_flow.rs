@@ -1,6 +1,6 @@
 use std::mem;
 use std::ops::Range;
-use super::ACCURACY;
+use super::{ACCURACY, MAX_ITERATIONS};
 
 /// Calculates the present value of future cash flows with discrete compounding
 pub fn pv_discrete(times: &[f64], amounts: &[f64], r: f64) -> f64 {
@@ -16,7 +16,7 @@ pub fn pv(times: &[f64], amounts: &[f64], r: f64) -> f64 {
 }
 
 /// Calculates the internal rate of return
-pub fn irr(times: &[f64], amounts: &[f64], max_iteration: usize, bucket: &Range<f64>) -> Option<f64> {
+pub fn irr(times: &[f64], amounts: &[f64], bucket: &Range<f64>) -> Option<f64> {
 
     let (mut x1, mut x2) = (bucket.start, bucket.end);
     let (mut f1, mut f2) = (pv(times, amounts, x1), pv(times, amounts, x2));
@@ -32,7 +32,7 @@ pub fn irr(times: &[f64], amounts: &[f64], max_iteration: usize, bucket: &Range<
     }
 
     let (mut rtb, mut dx) = (x1, x2 - x1);
-    for _ in 0..max_iteration {
+    for _ in 0..MAX_ITERATIONS {
         dx / 2.0;
         let x_mid = rtb + dx;
         let f_mid = pv(times, amounts, x_mid);
@@ -81,7 +81,7 @@ fn test_pv() {
 
 #[test]
 fn test_irr() {
-    let a = irr(&[1.0, 2.0, 3.0], &[-2f64, 1.0, 1.0], 50, &(0.0f64..1.0));
+    let a = irr(&[1.0, 2.0, 3.0], &[-2f64, 1.0, 1.0], &(0.0f64..1.0));
     assert_eq!(a, Some(0.9999923706054688));
 }
 

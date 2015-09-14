@@ -32,7 +32,7 @@ pub fn yield_to_maturity(times: &[f64], amounts: &[f64], bond_price: f64) -> Opt
     times.insert(0, zero);
     let mut amounts = amounts.to_vec();
     amounts.insert(0, bond_price);
-    cash_flow::irr(&times, &amounts, 200, &(zero..top))
+    cash_flow::irr(&times, &amounts, &(zero..top))
 }
 
 /// Duration of the bond
