@@ -38,14 +38,14 @@ pub fn call_price(s: f64, k: f64, r: f64, sigma: f64, t: f64, greeks: &mut Optio
 }
 
 pub fn implied_volatility_call_bissection(s: f64, k: f64, r: f64, t: f64, option_price: f64) ->
-Result<f64, &'static str>
-    {
-    let mut sigma_low = 1.0e-4; // check for arbitrage violation
+    Result<f64, &'static str>
+{
+    let mut sigma_low = 1.0e-5; // check for arbitrage violation
     let mut no_greek = None;
     let mut price = call_price(s, k, r, sigma_low, t, &mut no_greek);
 
     if price > option_price {
-        return Err("Arbitrage violation");
+        return Ok(0.0);
     }
 
     let mut sigma_high = 0.3f64;
@@ -69,6 +69,32 @@ Result<f64, &'static str>
         } else {
             sigma_high = sigma;
         }
+    }
+    Err("Cannot find implied volatility")
+}
+
+pub fn implied_volatility_call_newton(s: f64, k: f64, r: f64, t: f64, option_price: f64) ->
+    Result<f64, &'static str>
+{
+    let mut sigma_low = 1.0e-5; // check for arbitrage violation
+    let mut no_greek = None;
+    let mut price = call_price(s, k, r, sigma_low, t, &mut no_greek);
+
+    if price > option_price {
+        return Ok(0.0);
+    }
+
+    let sqrt_t = t.sqrt();
+    let mut sigma = (option_price / s) / (0.398 * sqrt_t);
+    for _ in 0..MAX_ITERATIONS {
+        price = call_price(s, k, r, sigma, t, &mut no_greek);
+        let diff = option_price - price;
+        if diff.abs() < ACCURACY {
+            return Ok(sigma);
+        }
+        let d1 = ((s / k).ln() + sqrt_t) / (sigma * sqrt_t) + 0.5 * sigma * sqrt_t;
+        let vega = s * sqrt_t * standard_normal_pdf(d1);
+        sigma += diff / vega;
     }
     Err("Cannot find implied volatility")
 }
