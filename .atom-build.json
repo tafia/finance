@@ -1,6 +1,0 @@
-{
-  "cmd": "cargo",
-  "args": [ "build" ],
-  "cwd": "{PROJECT_PATH}",
-  "errorMatch": "^(?<file>[^\\.]+.rs):(?<line>\\d+):(?<col>\\d+)"
-}
