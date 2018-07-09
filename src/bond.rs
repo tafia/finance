@@ -1,4 +1,3 @@
-use super::ACCURACY;
 use cash_flow;
 
 /// Price for a bond with continuous compounding
@@ -22,7 +21,7 @@ pub fn yield_to_maturity(times: &[f64], amounts: &[f64], bond_price: f64) -> Opt
     let (zero, one) = (0f64, 1f64);
     let mut top = one;
     while price(times, amounts, top) > bond_price {
-        top * 2.0;
+        top *= 2.0;
     }
 
     // this is the same as finding the internal rate of return,
