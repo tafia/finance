@@ -1,4 +1,3 @@
-
 /// Price of future
 /// s: current price of asset
 /// r: risk-free interest rate

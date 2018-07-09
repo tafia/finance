@@ -1,23 +1,28 @@
+use super::{ACCURACY, MAX_ITERATIONS};
 use std::mem;
 use std::ops::Range;
-use super::{ACCURACY, MAX_ITERATIONS};
 
 /// Calculates the present value of future cash flows with discrete compounding
 pub fn pv_discrete(times: &[f64], amounts: &[f64], r: f64) -> f64 {
     let acc = 1.0 + r;
-    amounts.iter().zip(times.iter())
-    .map(|(&amount, &t)| amount / acc.powf(t)).sum()
+    amounts
+        .iter()
+        .zip(times.iter())
+        .map(|(&amount, &t)| amount / acc.powf(t))
+        .sum()
 }
 
 /// Calculates the present value of future cash flows with continuous compounded interest
 pub fn pv(times: &[f64], amounts: &[f64], r: f64) -> f64 {
-    amounts.iter().zip(times.iter())
-    .map(|(&amount, &t)| amount * (-(r * t)).exp()).sum()
+    amounts
+        .iter()
+        .zip(times.iter())
+        .map(|(&amount, &t)| amount * (-(r * t)).exp())
+        .sum()
 }
 
 /// Calculates the internal rate of return
 pub fn irr(times: &[f64], amounts: &[f64], bucket: &Range<f64>) -> Option<f64> {
-
     let (mut x1, mut x2) = (bucket.start, bucket.end);
     let (mut f1, mut f2) = (pv(times, amounts, x1), pv(times, amounts, x2));
 
@@ -37,7 +42,7 @@ pub fn irr(times: &[f64], amounts: &[f64], bucket: &Range<f64>) -> Option<f64> {
         let x_mid = rtb + dx;
         let f_mid = pv(times, amounts, x_mid);
         if f_mid.abs() < ACCURACY || dx.abs() < ACCURACY {
-            return Some(x_mid)
+            return Some(x_mid);
         }
         if f_mid < 0.0 {
             rtb = x_mid;
@@ -47,8 +52,12 @@ pub fn irr(times: &[f64], amounts: &[f64], bucket: &Range<f64>) -> Option<f64> {
 }
 
 pub fn is_unique_irr(times: &[f64], amounts: &[f64]) -> bool {
-    match amounts[1..].iter().zip(amounts[..times.len() - 1].iter())
-        .filter(|&(&a1, &a0)| a1.signum() != a0.signum()).count() {
+    match amounts[1..]
+        .iter()
+        .zip(amounts[..times.len() - 1].iter())
+        .filter(|&(&a1, &a0)| a1.signum() != a0.signum())
+        .count()
+    {
         0 => false,
         1 => true,
         _ => {
@@ -64,7 +73,6 @@ pub fn is_unique_irr(times: &[f64], amounts: &[f64]) -> bool {
             sign_changes <= 1
         }
     }
-
 }
 
 #[test]

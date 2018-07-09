@@ -18,7 +18,6 @@ pub fn price_discrete(times: &[f64], amounts: &[f64], r: f64) -> f64 {
 /// Yield to maturity
 /// internal rate of return at present time, with bond_price as today cash flow
 pub fn yield_to_maturity(times: &[f64], amounts: &[f64], bond_price: f64) -> Option<f64> {
-
     // find range
     let (zero, one) = (0f64, 1f64);
     let mut top = one;
@@ -51,20 +50,20 @@ pub fn duration(times: &[f64], amounts: &[f64], r: f64) -> f64 {
 
 /// Duration where the bond price is defined with its yield to maturity
 pub fn duration_macaulay(times: &[f64], amounts: &[f64], bond_price: f64) -> Option<f64> {
-    yield_to_maturity(times, amounts, bond_price)
-    .map(|y| duration(times, amounts, y))
+    yield_to_maturity(times, amounts, bond_price).map(|y| duration(times, amounts, y))
 }
 
 /// Modified duration = duration / yield
-pub fn duration_modified(times: &[f64], amounts: &[f64], r: f64, bond_price: f64)
-    -> Option<f64> {
+pub fn duration_modified(times: &[f64], amounts: &[f64], r: f64, bond_price: f64) -> Option<f64> {
     let duration = duration(times, amounts, r);
-    yield_to_maturity(times, amounts, bond_price)
-    .map(|y| duration / (1f64 + y))
+    yield_to_maturity(times, amounts, bond_price).map(|y| duration / (1f64 + y))
 }
 
 /// Convexity: curvature of the approximation done when using duration
 pub fn convexity(times: &[f64], amounts: &[f64], y: f64) -> f64 {
-    amounts.iter().zip(times.iter())
-    .map(|(&amount, &t)| amount * t * t * (-(y * t)).exp()).sum()
+    amounts
+        .iter()
+        .zip(times.iter())
+        .map(|(&amount, &t)| amount * t * t * (-(y * t)).exp())
+        .sum()
 }

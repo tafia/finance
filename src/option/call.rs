@@ -1,6 +1,6 @@
 use math::{standard_normal_cdf, standard_normal_pdf};
-use ::{MAX_ITERATIONS, HIGH_VALUE, ACCURACY};
 use option::Greeks;
+use {ACCURACY, HIGH_VALUE, MAX_ITERATIONS};
 
 /// European option price
 /// Can be exerced only at a given date
@@ -24,15 +24,19 @@ pub fn price(s: f64, k: f64, r: f64, sigma: f64, t: f64, greeks: &mut Option<Gre
             gamma: pdf1 / (s * sig_sqrt_t),
             theta: -(s * sigma * pdf1) / (2.0 * sqrt_t) - r * k * (-r * t).exp() * cdf2,
             vega: s * sqrt_t * pdf1,
-            rho: k * t * (-r * t).exp() * cdf2
+            rho: k * t * (-r * t).exp() * cdf2,
         };
     }
     s * cdf1 - k * (-r * t).exp() * cdf2
 }
 
-pub fn implied_volatility_bissection(s: f64, k: f64, r: f64, t: f64, option_price: f64) ->
-    Result<f64, &'static str>
-{
+pub fn implied_volatility_bissection(
+    s: f64,
+    k: f64,
+    r: f64,
+    t: f64,
+    option_price: f64,
+) -> Result<f64, &'static str> {
     let mut sigma_low = 1.0e-5; // check for arbitrage violation
     let mut no_greek = None;
     let mut price_ = price(s, k, r, sigma_low, t, &mut no_greek);
@@ -66,9 +70,13 @@ pub fn implied_volatility_bissection(s: f64, k: f64, r: f64, t: f64, option_pric
     Err("Cannot find implied volatility")
 }
 
-pub fn implied_volatility_newton(s: f64, k: f64, r: f64, t: f64, option_price: f64) ->
-    Result<f64, &'static str>
-{
+pub fn implied_volatility_newton(
+    s: f64,
+    k: f64,
+    r: f64,
+    t: f64,
+    option_price: f64,
+) -> Result<f64, &'static str> {
     let mut sigma_low = 1.0e-5; // check for arbitrage violation
     let mut no_greek = None;
     let mut price_ = price(s, k, r, sigma_low, t, &mut no_greek);

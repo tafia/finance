@@ -21,9 +21,9 @@ pub fn price_call_european(s: f64, k: f64, r: f64, u: f64, d: f64, n: usize) -> 
     for (&p, v) in prices.iter().zip(call_values.iter_mut()) {
         *v = 0f64.max((p - k));
     }
-    for step in (0..n-1).rev() {
+    for step in (0..n - 1).rev() {
         for i in 0..(step + 1) {
-            call_values[i] = (p_up * call_values[i - 1] + p_down * call_values[i])/r_exp;
+            call_values[i] = (p_up * call_values[i - 1] + p_down * call_values[i]) / r_exp;
         }
     }
     call_values[0]
