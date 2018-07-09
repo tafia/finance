@@ -1,5 +1,5 @@
 use math::{standard_normal_cdf, standard_normal_pdf};
-use option::{Call, Greeks};
+use option::{Call, Greeks, Put};
 use {ACCURACY, HIGH_VALUE, MAX_ITERATIONS};
 
 pub enum VolError {
@@ -16,7 +16,7 @@ impl Call {
         let d2 = d1 - sig_sqrt_t;
         let cdf1 = standard_normal_cdf(d1);
         let cdf2 = standard_normal_cdf(d2);
-        self.s * cdf1 - self.k * (-self.r * self.t).exp() * cdf2
+        self.s * (-self.q * self.t).exp() * cdf1 - self.k * (-self.r * self.t).exp() * cdf2
     }
 
     /// Compute the price and the Greeks using the Black and Scoles formula
@@ -29,18 +29,65 @@ impl Call {
         let cdf1 = standard_normal_cdf(d1);
         let cdf2 = standard_normal_cdf(d2);
         let pdf1 = standard_normal_pdf(d1);
-        let price = self.s * cdf1 - self.k * (-self.r * self.t).exp() * cdf2;
+        let eqt = (-self.q * self.t).exp();
+        let ert = (-self.r * self.t).exp();
+        let price = self.s * eqt * cdf1 - self.k * ert * cdf2;
+        // for other greeks, see wikipedia
+        // https://en.wikipedia.org/wiki/Greeks_(finance)
         let greeks = Greeks {
-            delta: cdf1,
+            delta: eqt * cdf1,
             gamma: pdf1 / (self.s * sig_sqrt_t),
-            theta: -(self.s * self.vol * pdf1) / (2.0 * sqrt_t)
-                - self.r * self.k * (-self.r * self.t).exp() * cdf2,
-            vega: self.s * sqrt_t * pdf1,
-            rho: self.k * self.t * (-self.r * self.t).exp() * cdf2,
+            theta: -(self.s * eqt * self.vol * pdf1) / (2.0 * sqrt_t) - self.r * self.k * ert * cdf2
+                + self.q * self.s * eqt * cdf1,
+            vega: self.s * eqt * sqrt_t * pdf1,
+            rho: self.k * self.t * ert * cdf2,
         };
         (price, greeks)
     }
+}
 
+impl Put {
+    /// Compute the price using the Black and Scoles formula
+    pub fn bs_price(&self) -> f64 {
+        let sqrt_t = self.t.sqrt();
+        let sig_sqrt_t = self.vol * sqrt_t;
+        let d1 = ((self.s / self.k).ln() + self.r * self.t) / sig_sqrt_t + sig_sqrt_t / 2.0;
+        let d2 = d1 - sig_sqrt_t;
+        let cdf1 = standard_normal_cdf(-d1);
+        let cdf2 = standard_normal_cdf(-d2);
+        self.k * (-self.r * self.t).exp() * cdf2 - self.s * (-self.q * self.t).exp() * cdf1
+    }
+
+    /// Compute the price and the Greeks using the Black and Scoles formula
+    /// Reuse intermediate variables to compute greeks
+    pub fn bs_price_and_greeks(&self) -> (f64, Greeks) {
+        let sqrt_t = self.t.sqrt();
+        let sig_sqrt_t = self.vol * sqrt_t;
+        let d1 = ((self.s / self.k).ln() + self.r * self.t) / sig_sqrt_t + sig_sqrt_t / 2.0;
+        let d2 = d1 - sig_sqrt_t;
+        let cdf1 = standard_normal_cdf(-d1);
+        let cdf2 = standard_normal_cdf(-d2);
+        let pdf1 = standard_normal_pdf(d1);
+        let eqt = (-self.q * self.t).exp();
+        let ert = (-self.r * self.t).exp();
+        let price = self.k * ert * cdf2 - self.s * eqt * cdf1;
+        // for other greeks, see wikipedia
+        // https://en.wikipedia.org/wiki/Greeks_(finance)
+        let greeks = Greeks {
+            delta: -eqt * cdf1,
+            gamma: eqt * pdf1 / (self.s * sig_sqrt_t),
+            theta: -(self.s * eqt * self.vol * pdf1) / (2.0 * sqrt_t) + self.r * self.k * ert * cdf2
+                - self.q * self.s * eqt * cdf1,
+            vega: self.s * eqt * sqrt_t * pdf1,
+            rho: -self.k * self.t * ert * cdf2,
+        };
+        (price, greeks)
+    }
+}
+
+macro_rules! impl_implied_vol {
+    ($option:ident) => {
+impl $option {
     /// Update self.vol based on observable call_price
     pub fn bissect_implied_vol(&mut self, call_price: f64) -> Result<(), VolError> {
         let mut low_call = self.clone();
@@ -96,3 +143,8 @@ impl Call {
         Err(VolError::TooManyIterations)
     }
 }
+    }
+}
+
+impl_implied_vol!(Call);
+impl_implied_vol!(Put);

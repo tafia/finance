@@ -15,6 +15,24 @@ pub struct Call {
     pub s: f64,
     /// Asset implied volatility
     pub vol: f64,
+    /// Annual dividend yield
+    pub q: f64,
+    /// Time to maturity
+    pub t: f64,
+    /// strike
+    pub k: f64,
+    /// Risk free rate
+    pub r: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct Put {
+    /// Asset price
+    pub s: f64,
+    /// Asset implied volatility
+    pub vol: f64,
+    /// Annual dividend yield
+    pub q: f64,
     /// Time to maturity
     pub t: f64,
     /// strike
