@@ -62,7 +62,7 @@ pub struct TermStructureFlat {
 }
 
 impl TermStructure for TermStructureFlat {
-    fn yield_(&self, t: f64) -> f64 {
+    fn yield_(&self, _t: f64) -> f64 {
         self.r.max(0.0)
     }
 }

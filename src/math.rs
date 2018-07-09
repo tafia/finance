@@ -17,6 +17,6 @@ pub fn standard_normal_cdf(mut x: f64) -> f64 {
 }
 
 /// Normal  cumulative density function
-pub fn standard_normal_pdf(mut x: f64) -> f64 {
+pub fn standard_normal_pdf(x: f64) -> f64 {
     (-x * x).exp() * ::std::f64::consts::FRAC_2_SQRT_PI / 4.0
 }

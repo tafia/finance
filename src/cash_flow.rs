@@ -38,7 +38,7 @@ pub fn irr(times: &[f64], amounts: &[f64], bucket: &Range<f64>) -> Option<f64> {
 
     let (mut rtb, mut dx) = (x1, x2 - x1);
     for _ in 0..MAX_ITERATIONS {
-        dx / 2.0;
+        dx /= 2.0;
         let x_mid = rtb + dx;
         let f_mid = pv(times, amounts, x_mid);
         if f_mid.abs() < ACCURACY || dx.abs() < ACCURACY {

@@ -1,12 +1,12 @@
 extern crate num;
 extern crate rand;
 
-mod bond;
-mod cash_flow;
-mod future;
-mod math;
-mod option;
-mod term_structure;
+pub mod bond;
+pub mod cash_flow;
+pub mod future;
+pub mod math;
+pub mod option;
+pub mod term_structure;
 
 pub const ACCURACY: f64 = 1.0e-5;
 pub const MAX_ITERATIONS: usize = 100;
