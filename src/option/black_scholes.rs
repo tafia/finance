@@ -7,6 +7,13 @@ pub enum VolError {
     TooManyIterations,
 }
 
+pub enum VolMethod {
+    Newton,
+    Bissection,
+    BrennerSubrahmanyam,
+    // StefanicaRadoicic,
+}
+
 #[derive(Default, Debug)]
 pub struct GreeksBuilder {
     pub delta: bool,
@@ -141,19 +148,35 @@ impl Put {
 macro_rules! impl_implied_vol {
     ($option:ident) => {
         impl $option {
-            /// Update self.vol based on observable call_price
-            pub fn bissect_implied_vol(&mut self, call_price: f64) -> Result<(), VolError> {
+            pub fn set_implied_vol(
+                &mut self,
+                method: VolMethod,
+                option_price: f64,
+            ) -> Result<(), VolError> {
+                match method {
+                    VolMethod::Bissection => self.bissect_implied_vol(option_price),
+                    VolMethod::Newton => self.newton_implied_vol(option_price),
+                    VolMethod::BrennerSubrahmanyam => {
+                        self.vol =
+                            (2. * ::std::f64::consts::PI / self.t).sqrt() * option_price / self.s;
+                        Ok(())
+                    }
+                }
+            }
+
+            /// Update self.vol based on observable option_price
+            fn bissect_implied_vol(&mut self, option_price: f64) -> Result<(), VolError> {
                 let mut low_call = self.clone();
                 low_call.vol = 1.0e-5;
 
-                if low_call.bs_price() > call_price {
+                if low_call.bs_price() > option_price {
                     self.vol = 0.0;
                     return Ok(());
                 }
 
                 let mut high_call = self.clone();
                 high_call.vol = 0.3;
-                while high_call.bs_price() < call_price {
+                while high_call.bs_price() < option_price {
                     high_call.vol *= 2.0;
                     if high_call.vol > HIGH_VALUE {
                         return Err(VolError::HighVol);
@@ -161,7 +184,7 @@ macro_rules! impl_implied_vol {
                 }
                 for _ in 0..MAX_ITERATIONS {
                     self.vol = (low_call.vol + high_call.vol) * 0.5;
-                    let diff = self.bs_price() - call_price;
+                    let diff = self.bs_price() - option_price;
                     if diff.abs() < ACCURACY {
                         return Ok(());
                     }
@@ -174,21 +197,21 @@ macro_rules! impl_implied_vol {
                 Err(VolError::TooManyIterations)
             }
 
-            /// Update self.vol based on observable call_price
-            pub fn newton_implied_vol(&mut self, call_price: f64) -> Result<(), VolError> {
+            /// Update self.vol based on observable option_price
+            fn newton_implied_vol(&mut self, option_price: f64) -> Result<(), VolError> {
                 self.vol = 1.0e-5;
-                if self.bs_price() > call_price {
+                if self.bs_price() > option_price {
                     return Ok(());
                 }
 
-                self.vol = (call_price / self.s) / (0.398 * self.t.sqrt());
+                self.vol = (option_price / self.s) / (0.398 * self.t.sqrt());
                 let builder = GreeksBuilder {
                     vega: true,
                     ..GreeksBuilder::default()
                 };
                 for _ in 0..MAX_ITERATIONS {
                     let (price, greeks) = self.bs_price_and_greeks(&builder);
-                    let diff = call_price - price;
+                    let diff = option_price - price;
                     if diff.abs() < ACCURACY {
                         return Ok(());
                     }
